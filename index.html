@@ -292,11 +292,34 @@ p{ margin:0 0 1em; }
 .echantillon:hover{ border-color:var(--bordure-arg); }
 .echantillon[aria-pressed="true"]{ border-color:var(--or); box-shadow:0 0 0 3px rgba(212,175,55,.2); }
 .echantillon .pastille{ display:block; height:62px; position:relative; }
-.echantillon .pastille::after{
+/* bardeau : rangs horizontaux et découpes */
+.echantillon .pastille--bardeau::after{
   content:""; position:absolute; inset:0;
   background:repeating-linear-gradient(180deg, rgba(0,0,0,.3) 0 2px, transparent 2px 14px),
              repeating-linear-gradient(90deg, rgba(255,255,255,.08) 0 1px, transparent 1px 24px);
 }
+/* tôle : joints verticaux agrafés, aucune vis */
+.echantillon .pastille--tole::after{
+  content:""; position:absolute; inset:0;
+  background:repeating-linear-gradient(90deg,
+    rgba(0,0,0,.34) 0 3px, rgba(255,255,255,.14) 3px 5px, transparent 5px 22px);
+}
+
+/* Onglets bardeau / tôle */
+.onglets-materiau{ display:flex; gap:0; margin-bottom:18px; border-bottom:1px solid var(--bordure); }
+.onglets-materiau button{
+  font:inherit; font-weight:800; font-size:.86rem; letter-spacing:.03em;
+  background:none; border:0; border-bottom:2px solid transparent; margin-bottom:-1px;
+  color:var(--texte-faible); padding:11px 18px; cursor:pointer; transition:color .2s ease, border-color .2s ease;
+}
+.onglets-materiau button:hover{ color:var(--texte-doux); }
+.onglets-materiau button[aria-selected="true"]{ color:var(--or); border-bottom-color:var(--or); }
+
+.avis-couleurs{
+  margin-top:20px; padding:16px 18px; border-left:2px solid var(--or);
+  background:rgba(212,175,55,.05); font-size:.86rem; color:var(--texte-doux); line-height:1.65;
+}
+.avis-couleurs strong{ color:var(--or-clair); font-weight:700; }
 .echantillon .nom{ display:block; padding:9px 11px; font-size:.78rem; font-weight:700; color:var(--texte-doux); }
 .apercu-toit{ border:1px solid var(--bordure); border-radius:var(--rayon); overflow:hidden; background:var(--surface); }
 .apercu-legende{ padding:14px 18px; font-size:.86rem; color:var(--texte-doux); border-top:1px solid var(--bordure); }
@@ -747,17 +770,24 @@ body:has(.porte){ overflow:hidden; }
 <!-- ================= NUANCIER ================= -->
 <section class="section section--alt" id="bardeaux">
   <div class="contenu">
-    <p class="surtitre">Choisir sa couleur</p>
-    <h2>Essayez les couleurs sur un toit</h2>
-    <p class="chapeau">Une couleur pâle vieillit mieux au soleil, une couleur foncée cache la poussière et fond la neige plus vite. Cliquez pour voir le rendu.</p>
+    <p class="surtitre">Se faire une idée</p>
+    <h2>Voir une couleur sur un toit</h2>
+    <p class="chapeau">Une couleur pâle vieillit mieux au soleil, une couleur foncée cache la poussière et fond la neige plus vite. Cliquez pour voir le rendu&nbsp;— puis laissez Hugo vous montrer les vrais échantillons.</p>
 
     <div class="nuancier apparait" style="margin-top:36px">
       <div>
+        <div class="onglets-materiau" role="tablist" aria-label="Type de recouvrement">
+          <button type="button" role="tab" data-materiau="bardeau" aria-selected="true">Bardeau d'asphalte</button>
+          <button type="button" role="tab" data-materiau="tole" aria-selected="false">Tôle agrafée</button>
+        </div>
         <div class="echantillons" data-echantillons></div>
-        <p style="margin-top:18px;font-size:.85rem;color:var(--texte-faible)">
-          Teintes génériques à titre indicatif. Les noms et codes exacts du fabricant retenu
-          (<span class="aremplir" data-champ="fournisseur">IKO / BP / Malarkey</span>) sont confirmés à la soumission,
-          et un vrai échantillon vous est apporté sur place.
+        <p class="avis-couleurs">
+          <strong>Un écran ne rend pas une vraie couleur.</strong> Ces teintes sont indicatives.
+          Les couleurs offertes, leurs noms et leurs codes sont ceux des <strong>nuanciers des fabricants</strong>
+          (<span class="aremplir" data-champ="fournisseur">IKO / BP / Malarkey</span> pour le bardeau, selon le
+          fournisseur pour la tôle) et varient d'une gamme à l'autre.
+          <strong>Hugo apporte les échantillons réels lors de l'estimation</strong> — on les regarde ensemble,
+          au soleil, contre votre revêtement. C'est la seule façon de choisir pour vrai.
         </p>
       </div>
       <div class="apercu-toit">
@@ -770,20 +800,27 @@ body:has(.porte){ overflow:hidden; }
               <rect width="2" height="15.6" x="13" fill="#000" opacity=".2"/>
               <rect width="2" height="15.6" x="31" fill="#fff" opacity=".07"/>
             </pattern>
+            <!-- tôle agrafée : joints verticaux, aucune vis -->
+            <pattern id="ap-tole" width="38" height="24" patternUnits="userSpaceOnUse">
+              <rect width="38" height="24" data-teinte fill="#3E4249"/>
+              <rect width="4" height="24" x="0"  fill="#000" opacity=".34"/>
+              <rect width="2" height="24" x="4"  fill="#fff" opacity=".13"/>
+              <rect width="1" height="24" x="20" fill="#fff" opacity=".05"/>
+            </pattern>
           </defs>
           <rect width="800" height="470" fill="url(#ap-ciel)"/>
           <path d="M0 268 C160 244 300 264 440 250 C580 236 690 258 800 242 L800 470 L0 470 Z" fill="#0C221E"/>
           <g fill="#071714"><path d="M62 286 l16 40 h-32 z M62 262 l13 32 h-26 z"/><path d="M736 280 l17 42 h-34 z M736 254 l14 34 h-28 z"/></g>
           <rect x="164" y="268" width="472" height="180" fill="#221F1D"/>
           <rect x="486" y="126" width="40" height="76" fill="#3A2C25"/><rect x="480" y="118" width="52" height="13" fill="#4A382F"/>
-          <path d="M400 108 L664 268 L136 268 Z" fill="url(#ap-rangs)"/>
+          <path d="M400 108 L664 268 L136 268 Z" fill="url(#ap-rangs)" data-toit/>
           <path d="M386 118 L414 118 L414 106 L400 98 L386 106 Z" data-faitiere fill="#2C3036"/>
           <rect x="130" y="264" width="540" height="12" rx="3" fill="#8A6817"/>
           <g fill="#F0A65E"><rect x="220" y="318" width="62" height="76" rx="3"/><rect x="368" y="318" width="62" height="76" rx="3"/><rect x="516" y="318" width="62" height="76" rx="3"/></g>
           <g fill="#221F1D"><rect x="247" y="318" width="7" height="76"/><rect x="220" y="352" width="62" height="7"/><rect x="395" y="318" width="7" height="76"/><rect x="368" y="352" width="62" height="7"/><rect x="543" y="318" width="7" height="76"/><rect x="516" y="352" width="62" height="7"/></g>
           <rect y="446" width="800" height="24" fill="#080D0B"/>
         </svg>
-        <p class="apercu-legende">Teinte sélectionnée&nbsp;: <b data-nom-teinte>Charbon</b> — <span data-desc-teinte>le classique, s'agence à tout et cache la poussière.</span></p>
+        <p class="apercu-legende"><b data-nom-teinte>Charbon</b> — <span data-desc-teinte>le classique, s'agence à tout et cache la poussière.</span></p>
       </div>
     </div>
   </div>
@@ -1118,18 +1155,43 @@ const REALISATIONS = [
   { img:"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MDAgNTYwIiB3aWR0aD0iODAwIiBoZWlnaHQ9IjU2MCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsPSJUb2l0IHBsYXQgOiBtZW1icmFuZSDDqWxhc3RvbcOocmUgYmljb3VjaGUgc3VyIGLDonRpbWVudCBjb21tZXJjaWFsIj4NCiAgPGRlZnM+DQogICAgPGxpbmVhckdyYWRpZW50IGlkPSJwLWNpZWwiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMxMDFBMjAiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMzQTM1MzAiLz48L2xpbmVhckdyYWRpZW50Pg0KICAgIDxwYXR0ZXJuIGlkPSJwLWdyYW51bGUiIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+DQogICAgICA8cmVjdCB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIGZpbGw9IiMzOTM4M0EiLz4NCiAgICAgIDxjaXJjbGUgY3g9IjQiIGN5PSI0IiByPSIxLjQiIGZpbGw9IiM0RjRFNTEiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjkiIHI9IjEuNCIgZmlsbD0iIzJDMkIyRCIvPjxjaXJjbGUgY3g9IjciIGN5PSIxMiIgcj0iMS4yIiBmaWxsPSIjNTU1NDVBIi8+DQogICAgPC9wYXR0ZXJuPg0KICA8L2RlZnM+DQogIDxyZWN0IHdpZHRoPSI4MDAiIGhlaWdodD0iNTYwIiBmaWxsPSJ1cmwoI3AtY2llbCkiLz4NCiAgPHBhdGggZD0iTTAgMzAwIEMxODAgMjgyIDMyMCAyOTYgNDcwIDI4NCBDNjIwIDI3MiA3MDAgMjg4IDgwMCAyNzggTDgwMCA1NjAgTDAgNTYwIFoiIGZpbGw9IiMxNzFBMUQiLz4NCiAgPCEtLSBiw6J0aW1lbnQgZW4gcGVyc3BlY3RpdmUgLS0+DQogIDxwYXRoIGQ9Ik0xMjAgMzAwIEw2ODAgMzAwIEw2ODAgNTMwIEwxMjAgNTMwIFoiIGZpbGw9IiMyNDIxMjAiLz4NCiAgPHBhdGggZD0iTTEyMCAzMDAgTDMwMCAyMjQgTDgwMCAyMjQgTDY4MCAzMDAgWiIgZmlsbD0idXJsKCNwLWdyYW51bGUpIi8+DQogIDxwYXRoIGQ9Ik0xMjAgMzAwIEwzMDAgMjI0IEw4MDAgMjI0IEw2ODAgMzAwIFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzE0MTMxNCIgc3Ryb2tlLXdpZHRoPSIzIi8+DQogIDwhLS0gbMOpcyBkZSBtZW1icmFuZSAtLT4NCiAgPGcgc3Ryb2tlPSIjMUIxQTFDIiBzdHJva2Utd2lkdGg9IjMiIG9wYWNpdHk9Ii45Ij4NCiAgICA8cGF0aCBkPSJNMTgwIDI3NSBMMzYwIDIyNCIvPjxwYXRoIGQ9Ik0yNDUgMjQ4IEw0NTUgMjI0Ii8+PHBhdGggZD0iTTI3MCAzMDAgTDQ3MCAyMjQiLz48cGF0aCBkPSJNNDAwIDMwMCBMNTkwIDIyNCIvPjxwYXRoIGQ9Ik01MzAgMzAwIEw3MDAgMjI0Ii8+DQogIDwvZz4NCiAgPCEtLSBwYXJhcGV0IC0tPg0KICA8cGF0aCBkPSJNMTIwIDMwMCBMMzAwIDIyNCBMMzA4IDIzMCBMMTMwIDMwNiBaIiBmaWxsPSIjNEE0NjQwIi8+DQogIDwhLS0gZHJhaW4gZGUgdG9pdCAtLT4NCiAgPGVsbGlwc2UgY3g9IjQyMCIgY3k9IjI3MiIgcng9IjI2IiByeT0iMTIiIGZpbGw9IiMxNTE0MTUiLz4NCiAgPGVsbGlwc2UgY3g9IjQyMCIgY3k9IjI3MCIgcng9IjE2IiByeT0iNyIgZmlsbD0iIzhBNjgxNyIvPg0KICA8IS0tIHJvdWxlYXUgKyB0b3JjaGUgLS0+DQogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDU2MCwyNDYpIj4NCiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9IjAiIHJ4PSIzNCIgcnk9IjE1IiBmaWxsPSIjMkUyRDJGIi8+DQogICAgPHBhdGggZD0iTS0zNCAwIEwtMzQgLTIyIEEzNCAxNSAwIDAgMSAzNCAtMjIgTDM0IDAgQTM0IDE1IDAgMCAxIC0zNCAwIFoiIGZpbGw9IiMzOTM4M0EiLz4NCiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yMiIgcng9IjM0IiByeT0iMTUiIGZpbGw9IiM0QTQ5NEMiLz4NCiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9Ii0yMiIgcng9IjEwIiByeT0iNC41IiBmaWxsPSIjMTQxMzE0Ii8+DQogIDwvZz4NCiAgPGc+PHJlY3QgeD0iMjAwIiB5PSIyMzgiIHdpZHRoPSI4NiIgaGVpZ2h0PSIxMCIgcng9IjQiIGZpbGw9IiMzQTM3MzMiLz48cGF0aCBkPSJNMTk2IDI0MyBsLTMwIC04IGwwIDE2IHoiIGZpbGw9IiNENEFGMzciLz48L2c+DQogIDwhLS0gdW5pdMOpIGRlIHZlbnRpbGF0aW9uIC0tPg0KICA8ZyBmaWxsPSIjNEE0NjQwIj48cmVjdCB4PSI2NDAiIHk9IjIzNiIgd2lkdGg9IjcyIiBoZWlnaHQ9IjM0IiByeD0iNCIvPjxyZWN0IHg9IjY1MiIgeT0iMjI2IiB3aWR0aD0iNDgiIGhlaWdodD0iMTIiIHJ4PSIzIiBmaWxsPSIjNUM1ODUwIi8+PC9nPg0KICA8ZyBmaWxsPSIjRUZDNDZBIj48cmVjdCB4PSIxNzAiIHk9IjM2MCIgd2lkdGg9IjYwIiBoZWlnaHQ9Ijc2IiByeD0iMyIvPjxyZWN0IHg9IjI5MCIgeT0iMzYwIiB3aWR0aD0iNjAiIGhlaWdodD0iNzYiIHJ4PSIzIi8+PHJlY3QgeD0iNDEwIiB5PSIzNjAiIHdpZHRoPSI2MCIgaGVpZ2h0PSI3NiIgcng9IjMiLz48cmVjdCB4PSI1MzAiIHk9IjM2MCIgd2lkdGg9IjYwIiBoZWlnaHQ9Ijc2IiByeD0iMyIvPjwvZz4NCiAgPHJlY3QgeT0iNTMwIiB3aWR0aD0iODAwIiBoZWlnaHQ9IjMwIiBmaWxsPSIjMEEwQjBDIi8+DQo8L3N2Zz4NCg==",  titre:"Membrane élastomère",           lieu:"Kazabazua",    jeton:"Illustration" },
 ];
 
-/* --- Teintes du nuancier (noms génériques, pas de marque déposée) --- */
-const TEINTES = [
-  { nom:"Charbon",           hex:"#3E4249", desc:"le classique, s'agence à tout et cache la poussière." },
-  { nom:"Noir bicolore",     hex:"#2A2C31", desc:"le plus vendu au Québec, très net sur une maison pâle." },
-  { nom:"Gris ardoise",      hex:"#5C6470", desc:"réfléchit un peu plus la chaleur, vieillit très bien." },
-  { nom:"Brun terre",        hex:"#4A3B30", desc:"chaleureux, parfait avec du bois ou de la pierre." },
-  { nom:"Beige désert",      hex:"#7A6247", desc:"le plus pâle de la gamme, garde le comble plus frais." },
-  { nom:"Vert forêt",        hex:"#33453A", desc:"discret en milieu boisé, très demandé pour les chalets." },
-  { nom:"Rouge brique",      hex:"#6E3128", desc:"tranche fort, à réserver aux maisons de couleur neutre." },
-  { nom:"Bois de grange",    hex:"#5A4A3C", desc:"texture rustique, s'agence aux bâtiments de ferme." },
-  { nom:"Gris bois flotté",  hex:"#8A8779", desc:"le plus pâle du marché, effet cèdre vieilli." }
-];
+/* --- Nuanciers ------------------------------------------------------------
+   Teintes indicatives, aux noms génériques. Les couleurs réellement offertes,
+   leurs noms et leurs codes viennent des nuanciers des fabricants et changent
+   d'une gamme à l'autre. Hugo montre les vrais échantillons à l'estimation.
+   Pour coller à un fournisseur précis, remplacez simplement les listes.       */
+const NUANCIERS = {
+  bardeau: {
+    etiquette: "Bardeau d'asphalte",
+    motif: "ap-rangs",
+    teintes: [
+      { nom:"Charbon",          hex:"#3E4249", desc:"le classique, s'agence à tout et cache la poussière." },
+      { nom:"Noir bicolore",    hex:"#2A2C31", desc:"le plus vendu au Québec, très net sur une maison pâle." },
+      { nom:"Gris ardoise",     hex:"#5C6470", desc:"réfléchit un peu plus la chaleur, vieillit très bien." },
+      { nom:"Brun terre",       hex:"#4A3B30", desc:"chaleureux, parfait avec du bois ou de la pierre." },
+      { nom:"Beige désert",     hex:"#7A6247", desc:"le plus pâle de la gamme, garde le comble plus frais." },
+      { nom:"Vert forêt",       hex:"#33453A", desc:"discret en milieu boisé, très demandé pour les chalets." },
+      { nom:"Rouge brique",     hex:"#6E3128", desc:"tranche fort, à réserver aux maisons de couleur neutre." },
+      { nom:"Bois de grange",   hex:"#5A4A3C", desc:"texture rustique, s'agence aux bâtiments de ferme." },
+      { nom:"Gris bois flotté", hex:"#8A8779", desc:"le plus pâle du marché, effet cèdre vieilli." }
+    ]
+  },
+  tole: {
+    etiquette: "Tôle agrafée",
+    motif: "ap-tole",
+    teintes: [
+      { nom:"Noir",            hex:"#1E2024", desc:"la finition la plus demandée, très net sur une maison pâle." },
+      { nom:"Gris charbon",    hex:"#41464C", desc:"moins tranchant que le noir, salit moins visiblement." },
+      { nom:"Brun chocolat",   hex:"#3D2E25", desc:"le classique des chalets, s'agence au bois et à la pierre." },
+      { nom:"Vert forêt",      hex:"#26402F", desc:"disparaît dans le boisé, très courant en Haute-Gatineau." },
+      { nom:"Bourgogne",       hex:"#5C2420", desc:"traditionnel sur les bâtiments de ferme et les granges." },
+      { nom:"Bleu acier",      hex:"#2C4257", desc:"plus rare, ressort bien sur un revêtement gris ou blanc." },
+      { nom:"Beige sable",     hex:"#9C8B6E", desc:"pâle, garde le comble plus frais l'été." },
+      { nom:"Blanc",           hex:"#DEDBD3", desc:"le plus réfléchissant, mais montre tout ce qui coule." },
+      { nom:"Galvalume",       hex:"#A8ABA6", desc:"l'acier nu, aspect industriel, aucune peinture à ternir." }
+    ]
+  }
+};
 
 const VILLES = ["Maniwaki","Déléage","Egan-Sud","Bois-Franc","Messines","Blue Sea","Bouchette",
   "Sainte-Thérèse-de-la-Gatineau","Aumond","Montcerf-Lytton","Grand-Remous","Cayamant","Gracefield",
@@ -1229,32 +1291,51 @@ const VILLES = ["Maniwaki","Déléage","Egan-Sud","Bois-Franc","Messines","Blue 
     document.addEventListener("keydown", e => { if (e.key === "Escape") fermer(); });
   }
 
-  /* ---------- 6. Nuancier ---------- */
+  /* ---------- 6. Nuancier : bardeau ou tôle ---------- */
   function nuancier() {
-    const hote = $("[data-echantillons]"), teinte = $("[data-teinte]"),
-          faitiere = $("[data-faitiere]"), nom = $("[data-nom-teinte]"), desc = $("[data-desc-teinte]");
+    const hote = $("[data-echantillons]");
     if (!hote) return;
-    hote.innerHTML = TEINTES.map((t, i) => `
-      <button class="echantillon" type="button" aria-pressed="${i === 0}" data-i="${i}">
-        <span class="pastille" style="background:${t.hex}"></span>
-        <span class="nom">${t.nom}</span>
-      </button>`).join("");
+    const toit     = $("[data-toit]");
+    const faitiere = $("[data-faitiere]");
+    const nom      = $("[data-nom-teinte]");
+    const desc     = $("[data-desc-teinte]");
+    const onglets  = $$("[data-materiau]");
 
     const assombrir = (hex, f) => {
       const n = parseInt(hex.slice(1), 16);
       const r = Math.round(((n >> 16) & 255) * f), g = Math.round(((n >> 8) & 255) * f), b = Math.round((n & 255) * f);
       return "#" + [r, g, b].map(v => v.toString(16).padStart(2, "0")).join("");
     };
-    const choisir = i => {
-      const t = TEINTES[i];
-      if (teinte)   teinte.setAttribute("fill", t.hex);
+
+    let cleActuelle = "bardeau";
+
+    const choisirTeinte = i => {
+      const n = NUANCIERS[cleActuelle];
+      const t = n.teintes[i];
+      // les deux motifs partagent le même attribut : on teinte celui qui est affiché
+      $$("#" + n.motif + " [data-teinte]").forEach(r => r.setAttribute("fill", t.hex));
       if (faitiere) faitiere.setAttribute("fill", assombrir(t.hex, .72));
       if (nom)  nom.textContent = t.nom;
       if (desc) desc.textContent = t.desc;
       $$("button", hote).forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.i === i)));
     };
-    $$("button", hote).forEach(b => b.addEventListener("click", () => choisir(+b.dataset.i)));
-    choisir(0);
+
+    const choisirMateriau = cle => {
+      cleActuelle = cle;
+      const n = NUANCIERS[cle];
+      if (toit) toit.setAttribute("fill", "url(#" + n.motif + ")");
+      hote.innerHTML = n.teintes.map((t, i) => `
+        <button class="echantillon" type="button" aria-pressed="${i === 0}" data-i="${i}">
+          <span class="pastille pastille--${cle}" style="background:${t.hex}"></span>
+          <span class="nom">${t.nom}</span>
+        </button>`).join("");
+      $$("button", hote).forEach(b => b.addEventListener("click", () => choisirTeinte(+b.dataset.i)));
+      onglets.forEach(o => o.setAttribute("aria-selected", String(o.dataset.materiau === cle)));
+      choisirTeinte(0);
+    };
+
+    onglets.forEach(o => o.addEventListener("click", () => choisirMateriau(o.dataset.materiau)));
+    choisirMateriau("bardeau");
   }
 
   /* ---------- 7. Formulaire ---------- */
