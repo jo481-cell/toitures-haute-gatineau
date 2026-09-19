@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Feuille de temps — Les Toitures Haute-Gatineau</title>
+<meta property="og:title" content="Feuille de temps — Les Toitures Haute-Gatineau">
+<meta property="og:description" content="La feuille de temps à imprimer. Une par gars, par semaine.">
+<meta property="og:type" content="website">
+<style>
+:root{
+  --or:#D4AF37; --or-pale:#F2DFA0; --or-fonce:#8A6817;
+  --noir:#0B0B0C; --nuit:#141518; --os:#F4F2ED; --doux:#A8ACB0;
+  --titre:"Arial Black","Archivo Black","Segoe UI Black",Impact,sans-serif;
+}
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ margin:0; }
+body{
+  background:var(--noir); color:var(--os);
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  font-size:17px; line-height:1.55;
+  padding:28px 20px 60px;
+  display:flex; flex-direction:column; align-items:center;
+}
+.boite{ width:100%; max-width:460px; }
+
+header{ text-align:center; margin-bottom:26px; }
+header img{ width:118px; height:auto; display:block; margin:0 auto 14px; }
+h1{
+  font-family:var(--titre); font-size:1.72rem; line-height:1.1;
+  color:var(--or); margin:0 0 8px; text-transform:uppercase; letter-spacing:.5px;
+}
+header p{ margin:0; color:var(--doux); font-size:1rem; }
+
+.bouton{
+  display:block; text-align:center; text-decoration:none;
+  background:var(--or); color:#120E03; font-weight:800; font-size:1.12rem;
+  padding:19px 22px; border-radius:11px; margin:0 0 10px;
+  box-shadow:0 6px 20px rgba(212,175,55,.22);
+}
+.bouton:active{ background:var(--or-pale); }
+.sous-bouton{ text-align:center; color:var(--doux); font-size:.84rem; margin:0 0 30px; }
+
+section{
+  background:var(--nuit); border:1px solid rgba(244,242,237,.1);
+  border-radius:12px; padding:18px 20px; margin-bottom:16px;
+}
+section h2{
+  font-size:.74rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--or); margin:0 0 12px;
+}
+ol,ul{ margin:0; padding-left:20px; }
+li{ margin-bottom:9px; }
+li:last-child{ margin-bottom:0; }
+b{ color:var(--or-pale); }
+
+.cases{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-top:4px; }
+.case{
+  background:rgba(212,175,55,.09); border:1px solid rgba(212,175,55,.3);
+  border-radius:8px; padding:11px 12px;
+}
+.case b{ display:block; color:var(--or); font-size:.94rem; }
+.case span{ font-size:.8rem; color:var(--doux); }
+
+footer{ text-align:center; color:#6b7075; font-size:.78rem; margin-top:26px; }
+
+@media (prefers-color-scheme: light){
+  /* La page reste sombre : c'est la marque. Rien à changer. */
+}
+</style>
+</head>
+<body>
+<div class="boite">
+
+  <header>
+    <img src="logo.webp" alt="Les Toitures Haute-Gatineau">
+    <h1>Feuille de temps</h1>
+    <p>Une feuille par gars, par semaine.</p>
+  </header>
+
+  <a class="bouton" href="Feuille-de-temps-THG.pdf" download>Télécharger la feuille (PDF)</a>
+  <p class="sous-bouton">1 page · s'imprime sur une feuille ordinaire</p>
+
+  <section>
+    <h2>Comment s'en servir</h2>
+    <ol>
+      <li>Télécharger, puis <b>imprimer autant de copies</b> qu'il y a d'hommes.</li>
+      <li>En donner une à chacun en début de semaine.</li>
+      <li>Chacun écrit <b>son nom</b> et les <b>dates de la semaine</b> en haut.</li>
+      <li>Il remplit <b>quatre cases par jour</b>. Rien d'autre.</li>
+      <li>Il signe le dernier jour et remet la feuille.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Les quatre cases</h2>
+    <div class="cases">
+      <div class="case"><b>Arrivée</b><span>l'heure où il commence</span></div>
+      <div class="case"><b>Dîner de / à</b><span>la pause est déduite</span></div>
+      <div class="case"><b>Départ</b><span>l'heure où il finit</span></div>
+      <div class="case"><b>Total</b><span>les heures de la journée</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Deux détails qui comptent</h2>
+    <ul>
+      <li>La colonne <b>Absence</b> sert quand il part pour un rendez-vous —
+        banque, médecin. On y écrit le temps et le motif : <b>1 h — banque</b>.
+        Ce temps-là ne compte pas dans le total.</li>
+      <li>Le total s'écrit en <b>heures décimales</b> : sept heures et demie
+        s'écrit <b>7,50</b>, pas 7,30.</li>
+    </ul>
+  </section>
+
+  <footer>Les Toitures Haute-Gatineau</footer>
+
+</div>
+</body>
+</html>
