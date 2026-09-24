@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<title>Feuille de temps — Les Toitures Haute-Gatineau</title>
+<!--
+  FEUILLE DE TEMPS — source du PDF (Feuille-de-temps-THG.pdf)
+  Une page lettre, pensée pour être remplie à la main sur le chantier.
+  Pour refaire le PDF : ouvrir ce fichier dans Chrome, Imprimer, « Enregistrer
+  en PDF », format Lettre, marges Aucune, cocher « Graphiques d'arrière-plan ».
+  Les polices libres du dossier fonts/ remplacent Segoe UI et Arial Black
+  quand elles ne sont pas installées (Noto Sans, Archivo Black — licence OFL).
+-->
+<style>
+@font-face{ font-family:"THG Sans"; src:url("fonts/NotoSans.woff2") format("woff2"); font-weight:100 900; }
+@font-face{ font-family:"THG Titre"; src:url("fonts/ArchivoBlack.woff2") format("woff2"); font-weight:900; }
+@page{ size:letter; margin:0; }
+:root{
+  --or:#8A6717; --or-vif:#D4AF37; --or-texte:#5A4610;
+  --creme:#F7F2E3; --creme-tot:#FAF5E6; --etiquette:#EFE9DE;
+  --jour:#FAF9F5; --jour-fds:#F1EDE7; --cell-fds:#FBFAF9;
+  --grille:#CFCAC2; --cadre:#D4D0C8; --groupe:#B39455;
+  --encre:#111; --texte:#333; --doux:#666; --pale:#7A7469; --pied:#888;
+  --corps:"Segoe UI","THG Sans",Arial,sans-serif;
+  --titre:"Arial Black","THG Titre","Archivo Black",sans-serif;
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; background:#fff; }
+body{ font-family:var(--corps); color:var(--texte); -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+.page{ position:relative; width:612pt; height:792pt; overflow:hidden; background:#fff; }
+.a{ position:absolute; }
+.lbl{ font-weight:900; font-size:6.8pt; letter-spacing:.2em; text-transform:uppercase; color:var(--or); }
+
+/* ---- en-tête ---- */
+.logo{ left:33pt; top:29pt; width:62pt; height:auto; }
+.entreprise{ left:105pt; top:34pt; font-size:7.6pt; font-weight:700; color:var(--or); }
+.titre{ right:32.2pt; top:30pt; font-family:var(--titre); font-weight:900; font-size:20pt; letter-spacing:.02em; color:var(--or); line-height:1.1; }
+.sous-titre{ right:32.2pt; top:53pt; font-size:8pt; color:var(--doux); }
+.filet{ left:32.2pt; right:32.2pt; top:103.5pt; height:1.5pt; background:var(--or); }
+
+/* ---- employé / semaine ---- */
+.boite{ top:113pt; height:39pt; border:.75pt solid var(--cadre); border-radius:3pt; padding:6pt 7.5pt 0; }
+.boite-emp{ left:32.2pt; width:270pt; }
+.boite-sem{ left:310pt; width:269.8pt; }
+.boite .ligne{ position:absolute; bottom:5pt; height:.8pt; background:#999; }
+.boite-emp .ligne{ left:7.6pt; width:187.4pt; }
+.boite-sem .l1{ left:7.6pt; width:115pt; }
+.boite-sem .l2{ left:145pt; width:115pt; }
+.boite-sem .au{ position:absolute; left:127pt; bottom:5.5pt; font-size:9.5pt; font-weight:600; color:var(--encre); }
+
+/* ---- tableau des heures ---- */
+table.heures{ left:32.2pt; top:162pt; width:546.85pt; border-collapse:collapse; table-layout:fixed; }
+.heures col.c-jour{ width:62pt; } .heures col.c-chantier{ width:174pt; }
+.heures col.c-heure{ width:64pt; } .heures col.c-diner{ width:62pt; } .heures col.c-total{ width:58.85pt; }
+.heures thead th{ background:var(--or); color:#fff; font-weight:900; font-size:7pt; letter-spacing:.14em; text-transform:uppercase;
+  text-align:center; vertical-align:middle; padding:0 2pt; line-height:1.2; border:0; }
+.heures thead tr:first-child th{ height:15pt; }
+.heures thead tr:last-child th{ height:13pt; }
+.heures thead th.g{ text-align:left; padding-left:5.5pt; }
+.heures thead small{ display:block; font-size:5.6pt; font-weight:700; letter-spacing:.08em; margin-top:1pt; opacity:.95; }
+/* la section dîner : un titre commun, deux colonnes « de » et « à », un cadre à part */
+.heures thead th.diner{ border-bottom:.75pt solid rgba(255,255,255,.55); border-left:1.5pt solid var(--groupe); border-right:1.5pt solid var(--groupe); }
+.heures thead th.diner-de{ border-left:1.5pt solid var(--groupe); border-right:.75pt solid rgba(255,255,255,.4); font-size:6.4pt; }
+.heures thead th.diner-a{ border-right:1.5pt solid var(--groupe); font-size:6.4pt; }
+.heures tbody td{ height:36pt; border:.75pt solid var(--grille); background:#fff; }
+.heures tbody tr.fds td{ background:var(--cell-fds); }
+.heures tbody td.jour{ background:var(--jour); font-weight:900; font-size:8.6pt; color:var(--texte); padding-left:6pt; }
+.heures tbody tr.fds td.jour{ background:var(--jour-fds); }
+.heures tbody tr td.tot{ background:var(--creme-tot); }
+.heures tbody td.dn-de{ border-left:1.5pt solid var(--groupe); }
+.heures tbody td.dn-a{ border-right:1.5pt solid var(--groupe); }
+.heures tfoot td{ height:33pt; background:var(--or); color:#fff; font-weight:900; font-size:8pt; letter-spacing:.14em; text-transform:uppercase; text-align:right; padding-right:8pt; border:0; }
+.heures tfoot td.tot{ background:var(--or-vif); padding:0; border:0; }
+
+/* ---- appréciation ---- */
+.appr-titre{ left:32.2pt; top:482pt; }
+table.appr{ left:32.2pt; top:495pt; width:284pt; border-collapse:collapse; table-layout:fixed; }
+.appr col.c-lab{ width:106pt; }
+.appr td{ height:24pt; border:.75pt solid var(--grille); vertical-align:middle; }
+.appr td.lab{ background:var(--etiquette); padding:0 5pt; line-height:1.15; }
+.appr td.lab b{ display:block; font-weight:900; font-size:6pt; letter-spacing:.07em; text-transform:uppercase; color:var(--or-texte); white-space:nowrap; }
+.appr td.lab span{ display:block; font-size:5.5pt; color:var(--pale); margin-top:.8pt; white-space:nowrap; }
+.appr .notes{ display:flex; align-items:center; gap:10.5pt; padding-left:10pt; }
+.appr .notes i{ font-style:normal; width:15pt; height:15pt; border:.9pt solid var(--or); border-radius:50%; display:grid; place-items:center;
+  font-size:7pt; font-weight:700; color:var(--or); line-height:1; }
+.appr .cases{ display:flex; align-items:center; gap:14pt; padding-left:9pt; font-size:7pt; color:var(--texte); }
+.appr .cases i{ display:inline-block; width:9pt; height:9pt; border:.9pt solid var(--texte); margin-right:4pt; vertical-align:-1.5pt; }
+.appr .cases .ou{ display:flex; align-items:flex-end; gap:3pt; margin-left:-4pt; font-size:6.4pt; color:var(--pale); }
+.appr .cases .ou u{ display:block; width:40pt; height:.75pt; background:#999; margin-bottom:1.5pt; }
+.sig-txt .blanc{ display:inline-block; width:85pt; border-bottom:.8pt solid #555; }
+.appr-note{ left:32.2pt; top:622pt; font-size:6pt; color:var(--pale); }
+
+/* ---- remarques ---- */
+.rem{ left:324pt; top:482pt; width:255.8pt; height:134pt; border:.75pt solid var(--cadre); border-radius:3pt; padding:8pt 7.5pt 0; }
+.rem .lbl{ line-height:1.45; }
+.rem .l{ position:absolute; left:7.5pt; right:7.5pt; height:.75pt; background:#DDD; }
+
+/* ---- déclaration, signatures, pied ---- */
+.decl{ left:32.2pt; right:32.2pt; top:645.8pt; height:31.4pt; background:var(--creme); border-left:2pt solid var(--or);
+  padding:5pt 8pt 0 7pt; font-size:7.6pt; line-height:1.55; color:#3A2F0C; }
+.sig{ top:720pt; height:.8pt; background:var(--texte); }
+.sig-g{ left:32.2pt; width:264pt; } .sig-d{ left:315.8pt; width:264pt; }
+.sig-txt{ top:723pt; font-size:7.6pt; color:#555; }
+.sig-txt b{ color:var(--texte); font-weight:700; }
+.pied-filet{ left:32.2pt; right:32.2pt; top:756pt; height:.8pt; background:#E6E2DA; }
+.pied{ top:761pt; font-size:6.4pt; color:var(--pied); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <img class="a logo" src="../logo.webp" alt="Les Toitures Haute-Gatineau">
+  <div class="a entreprise">Les Toitures Haute-Gatineau</div>
+  <div class="a titre">FEUILLE DE TEMPS</div>
+  <div class="a sous-titre">Une feuille par personne, par semaine</div>
+  <div class="a filet"></div>
+
+  <div class="a boite boite-emp"><div class="lbl">Employé</div><div class="ligne"></div></div>
+  <div class="a boite boite-sem"><div class="lbl">Semaine</div><div class="ligne l1"></div><span class="au">au</span><div class="ligne l2"></div></div>
+
+  <table class="a heures">
+    <colgroup><col class="c-jour"><col class="c-chantier"><col class="c-heure"><col class="c-diner"><col class="c-diner"><col class="c-heure"><col class="c-total"></colgroup>
+    <thead>
+      <tr>
+        <th class="g" rowspan="2">Jour</th>
+        <th class="g" rowspan="2">Chantier<small>Nom ou adresse</small></th>
+        <th rowspan="2">Arrivée</th>
+        <th class="diner" colspan="2">Dîner</th>
+        <th rowspan="2">Départ</th>
+        <th rowspan="2">Total<br>heures</th>
+      </tr>
+      <tr><th class="diner-de">de</th><th class="diner-a">à</th></tr>
+    </thead>
+    <tbody>
+      <tr class="fds"><td class="jour">Dimanche</td><td></td><td></td><td class="dn-de"></td><td class="dn-a"></td><td></td><td class="tot"></td></tr>
+      <tr><td class="jour">Lundi</td><td></td><td></td><td class="dn-de"></td><td class="dn-a"></td><td></td><td class="tot"></td></tr>
+      <tr><td class="jour">Mardi</td><td></td><td></td><td class="dn-de"></td><td class="dn-a"></td><td></td><td class="tot"></td></tr>
+      <tr><td class="jour">Mercredi</td><td></td><td></td><td class="dn-de"></td><td class="dn-a"></td><td></td><td class="tot"></td></tr>
+      <tr><td class="jour">Jeudi</td><td></td><td></td><td class="dn-de"></td><td class="dn-a"></td><td></td><td class="tot"></td></tr>
+      <tr><td class="jour">Vendredi</td><td></td><td></td><td class="dn-de"></td><td class="dn-a"></td><td></td><td class="tot"></td></tr>
+      <tr class="fds"><td class="jour">Samedi</td><td></td><td></td><td class="dn-de"></td><td class="dn-a"></td><td></td><td class="tot"></td></tr>
+    </tbody>
+    <tfoot><tr><td colspan="6">Total des heures de la semaine</td><td class="tot"></td></tr></tfoot>
+  </table>
+
+  <div class="a lbl appr-titre">Appréciation — note et commentaires</div>
+  <table class="a appr">
+    <colgroup><col class="c-lab"><col></colgroup>
+    <tr><td class="lab"><b>Note de la semaine</b><span>1 = difficile · 5 = excellente</span></td>
+        <td><div class="notes"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i></div></td></tr>
+    <tr><td class="lab"><b>Ce qui a accroché</b><span>retard, matériel, météo, équipe</span></td><td></td></tr>
+    <tr><td class="lab"><b>Suivi client</b><span>demandes, remarques du client</span></td><td></td></tr>
+    <tr><td class="lab"><b>Ménage du chantier</b><span>terrain, clous, rebuts</span></td>
+        <td><div class="cases"><span><i></i>Fait</span><span><i></i>À reprendre</span><span class="ou">jour : <u></u></span></div></td></tr>
+    <tr><td class="lab"><b>Idée pour améliorer</b><span>une chose à faire autrement</span></td><td></td></tr>
+  </table>
+  <div class="a appr-note">Sert à repérer ce qui accroche et à améliorer nos façons de faire. Pas de mauvaise réponse.</div>
+
+  <div class="a rem">
+    <div class="lbl">Remarques — pluie, bris, heures supplémentaires demandées</div>
+    <div class="l" style="top:44pt"></div><div class="l" style="top:66pt"></div>
+    <div class="l" style="top:88pt"></div><div class="l" style="top:110pt"></div>
+  </div>
+
+  <div class="a decl">Je déclare que les heures inscrites ci-dessus sont exactes et correspondent au temps réellement travaillé. Toute heure supplémentaire a été demandée ou autorisée par l'employeur.</div>
+
+  <div class="a sig sig-g"></div><div class="a sig sig-d"></div>
+  <div class="a sig-txt" style="left:32.2pt"><b>Signature de l'employé</b> &nbsp; Date : <span class="blanc"></span></div>
+  <div class="a sig-txt" style="left:315.8pt"><b>Approuvé par</b> &nbsp; Date : <span class="blanc"></span></div>
+
+  <div class="a pied-filet"></div>
+  <div class="a pied" style="left:32.2pt">Les Toitures Haute-Gatineau — feuille de temps</div>
+  <div class="a pied" style="right:32.2pt">Total en heures décimales (7:30 = 7,50). &nbsp;·&nbsp; À conserver 6 ans avec les registres de paie.</div>
+
+</div>
+</body>
+</html>
