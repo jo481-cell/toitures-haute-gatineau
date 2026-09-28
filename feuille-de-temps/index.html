@@ -41,6 +41,10 @@ header p{ margin:0; color:var(--doux); font-size:1rem; }
 }
 .bouton:active{ background:var(--or-pale); }
 .sous-bouton{ text-align:center; color:var(--doux); font-size:.84rem; margin:0 0 30px; }
+.bouton--second{
+  background:transparent; color:var(--or); border:2px solid var(--or); box-shadow:none;
+}
+.bouton--second:active{ background:rgba(212,175,55,.12); }
 
 section{
   background:var(--nuit); border:1px solid rgba(244,242,237,.1);
@@ -81,6 +85,9 @@ footer{ text-align:center; color:#6b7075; font-size:.78rem; margin-top:26px; }
 
   <a class="bouton" href="Feuille-de-temps-THG.pdf" download>Télécharger la feuille (PDF)</a>
   <p class="sous-bouton">1 page · s'imprime sur une feuille ordinaire</p>
+
+  <a class="bouton bouton--second" href="remplir.html">Remplir à l'écran → PDF pour le dossier</a>
+  <p class="sous-bouton">Les heures se calculent · «&nbsp;Imprimer / PDF&nbsp;», puis «&nbsp;Enregistrer au format PDF&nbsp;»</p>
 
   <section>
     <h2>Comment s'en servir</h2>

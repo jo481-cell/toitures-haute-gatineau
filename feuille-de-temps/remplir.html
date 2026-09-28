@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feuille de temps — Les Toitures Haute-Gatineau</title>
+<link rel="icon" href="logo.webp" type="image/webp">
+<style>
+/* ============================================================
+   FEUILLE DE TEMPS — une feuille par homme, par semaine.
+   Arrivée · dîner · départ · total du jour · total de la semaine.
+   Fonctionne hors ligne, sans internet, sans installation.
+   ============================================================ */
+:root{
+  --or:#D4AF37; --or-pale:#F2DFA0; --or-fonce:#8A6817;
+  --noir:#0B0B0C; --nuit:#141518;
+  --os:#F4F2ED; --doux:#A8ACB0; --faible:#767B80;
+  --bordure:rgba(244,242,237,.11);
+  --titre:"Arial Black","Archivo Black","Segoe UI Black",Impact,sans-serif;
+  --corps:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+}
+*,*::before,*::after{ box-sizing:border-box; }
+body{ margin:0; background:var(--noir); color:var(--os); font-family:var(--corps); font-size:15px; }
+
+/* ---------- Barre d'outils ---------- */
+.barre{
+  position:sticky; top:0; z-index:20; display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+  padding:12px 18px; background:rgba(11,11,12,.94); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--bordure);
+}
+.barre img{ height:40px; }
+.barre .esp{ margin-left:auto; }
+.bt{
+  font:inherit; font-weight:800; font-size:.86rem; padding:10px 16px; border-radius:7px; cursor:pointer;
+  border:2px solid transparent; background:rgba(255,255,255,.06); color:var(--os); white-space:nowrap;
+}
+.bt:hover{ background:rgba(255,255,255,.11); }
+.bt--p{ background:var(--or); color:#120E03; }
+.bt--p:hover{ background:var(--or-pale); }
+.bt--v{ background:var(--or-fonce); color:#fff; }
+
+/* ---------- Disposition ---------- */
+.app{ display:grid; grid-template-columns:520px 1fr; align-items:start; }
+.editeur{
+  padding:20px 18px 90px; border-right:1px solid var(--bordure);
+  height:calc(100vh - 65px); overflow-y:auto; position:sticky; top:65px;
+}
+.apercu{
+  padding:26px; background:#3A3733; min-height:calc(100vh - 65px);
+  display:flex; flex-direction:column; align-items:center; gap:26px;
+}
+
+fieldset{ border:1px solid var(--bordure); border-radius:10px; padding:14px 14px 16px; margin:0 0 16px; }
+legend{ font-size:.72rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--or); padding:0 7px; }
+.r{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; }
+.c{ display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+.c--plein{ grid-column:1/-1; }
+.c label{ font-size:.7rem; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--faible); }
+.c input,.c select,.c textarea{
+  font:inherit; font-size:.88rem; color:var(--os); background:var(--noir);
+  border:1px solid rgba(255,255,255,.14); border-radius:6px; padding:8px 10px; width:100%; min-width:0;
+}
+.c textarea{ min-height:54px; resize:vertical; font-size:.82rem; }
+.c input:focus,.c select:focus,.c textarea:focus{ border-color:var(--or); outline:none; }
+.aide{ font-size:.72rem; color:var(--faible); margin:2px 0 0; line-height:1.45; }
+
+/* Grille de saisie des 7 jours */
+.jours-entetes,.jour{
+  display:grid; grid-template-columns:66px minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 56px; gap:4px; align-items:center;
+}
+.jours-entetes{
+  font-size:.56rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+  color:var(--faible); margin-bottom:6px; text-align:center;
+}
+.jours-entetes span:first-child{ text-align:left; }
+.jour{ margin-bottom:5px; }
+.jours-entetes small{ display:block; font-weight:600; letter-spacing:0; text-transform:none; font-size:.56rem; }
+/* Sous-ligne : chantier · km · absence · motif (le km suit le chantier, comme sur papier) */
+.sousligne{
+  display:grid; grid-template-columns:66px minmax(0,2.1fr) 46px 54px minmax(0,1fr); gap:4px;
+  align-items:center; margin-bottom:9px;
+}
+.sousligne .vide-gauche{ font-size:.58rem; color:var(--faible); text-align:right; padding-right:2px; }
+.sousligne input{ font-size:.76rem; padding:5px 7px; }
+.jour input{ font-size:.8rem; padding:6px 2px; text-align:center; min-width:0; }
+.jour .etiq{ font-size:.72rem; font-weight:800; color:var(--doux); }
+.jour .etiq small{ display:block; font-weight:600; color:var(--faible); font-size:.62rem; }
+.jour .calc{ font-size:.78rem; font-weight:800; color:var(--or); text-align:right; }
+/* Les exemples (7:00, 30 min, 16:30) en pâle et en italique : on ne les prend pas pour des heures saisies. */
+.jour input::placeholder,.sousligne input::placeholder{ color:#b8b8b8; font-style:italic; }
+.jour--conge input{ opacity:.45; }
+.jour input.invalide,.sousligne input.invalide{ border-color:#E0604A; background:rgba(224,96,74,.12); }
+
+.somme{
+  display:flex; justify-content:space-between; align-items:baseline;
+  margin-top:10px; padding-top:10px; border-top:1px solid var(--bordure);
+  font-size:.8rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--faible);
+}
+.somme b{ font-family:var(--titre); font-size:1.5rem; color:var(--or); letter-spacing:0; }
+
+.alerte{
+  background:rgba(212,175,55,.13); border:1px solid rgba(212,175,55,.4); border-radius:8px;
+  padding:10px 12px; font-size:.78rem; color:var(--or-pale); margin-bottom:14px; line-height:1.5;
+}
+.alerte code{ font-size:.92em; }
+
+/* ============================================================
+   LA FEUILLE IMPRIMÉE
+   ============================================================ */
+.page{
+  width:8.5in; height:10.95in; overflow:hidden; background:#fff; color:#111;
+  font-family:"Segoe UI",Arial,sans-serif; box-shadow:0 10px 40px rgba(0,0,0,.5); position:relative;
+}
+.feuille{
+  width:8.5in; min-height:10.95in; padding:.42in .45in .24in;
+  font-size:9.5pt; line-height:1.34; display:flex; flex-direction:column;
+}
+.page *{ box-sizing:border-box; }
+
+.tete{
+  display:flex; justify-content:space-between; gap:16px; align-items:flex-start;
+  border-bottom:2.5px solid #8A6817; padding-bottom:9px;
+}
+.tete-logo{ display:flex; gap:11px; align-items:flex-start; }
+.tete-logo img{ height:.92in; width:auto; flex:none; }
+.tete-ident{ font-size:7.6pt; line-height:1.5; margin-top:6px; color:#333; }
+.tete-ident b{ color:#8A6817; }
+.tete-droite{ text-align:right; min-width:2.6in; }
+.doc-type{
+  font-family:var(--titre); font-size:20pt; color:#8A6817; letter-spacing:.5px;
+  line-height:1; margin:0 0 6px; text-transform:uppercase;
+}
+.doc-sous{ font-size:8pt; color:#666; margin:0 0 6px; }
+.doc-meta table{ width:100%; border-collapse:collapse; font-size:8.4pt; }
+.doc-meta td{ padding:1.5px 0; }
+.doc-meta td:first-child{ color:#666; padding-right:10px; text-align:right; }
+.doc-meta td:last-child{ font-weight:700; text-align:right; }
+
+/* Bandeau identité de l'employé */
+.qui{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:11px 0 0; }
+.qui .bloc{ border:1px solid #d4d0c9; border-radius:3px; padding:7px 9px; }
+.qui h4{
+  margin:0 0 4px; font-size:6.8pt; letter-spacing:.13em; text-transform:uppercase;
+  color:#8A6817; font-weight:800;
+}
+.qui .val{ font-size:11.5pt; font-weight:700; min-height:.22in; }
+.qui .val--petit{ font-size:9.5pt; font-weight:600; }
+.vide{ display:inline-block; min-width:1.6in; border-bottom:1px solid #999; }
+
+/* Le tableau des jours.
+   Largeurs fixes (table-layout:fixed) : le chantier prend tout ce qui reste,
+   soit environ 2,5 po sur une feuille Lettre. */
+table.temps{ width:100%; border-collapse:collapse; margin-top:12px; table-layout:fixed; }
+table.temps col.c-jour{ width:.92in; }
+table.temps col.c-km{ width:.5in; }
+table.temps col.c-heure{ width:.64in; }
+table.temps col.c-diner{ width:.62in; }
+table.temps col.c-abs{ width:1in; }
+table.temps col.c-tot{ width:.76in; }
+table.temps th{
+  background:#8A6817; color:#fff; padding:6px 4px; line-height:1.2;
+  font-size:7pt; letter-spacing:.09em; text-transform:uppercase; font-weight:800; text-align:center;
+}
+table.temps th.g{ text-align:left; padding-left:6px; }
+table.temps th small{ display:block; font-size:5.8pt; letter-spacing:.04em; opacity:.9; font-weight:700; margin-top:1px; }
+table.temps td{
+  border:1px solid #bdb7ad; padding:0 4px; height:.54in; text-align:center;
+  font-size:11pt; font-weight:600; vertical-align:middle; overflow:hidden;
+}
+table.temps td.jour-nom{
+  text-align:left; padding-left:6px; font-size:8.6pt; font-weight:800; color:#333; background:#faf9f6;
+}
+table.temps td.jour-nom small{ display:block; font-weight:600; color:#777; font-size:7.2pt; }
+table.temps td.chantier{ text-align:left; padding:0 6px; font-size:9pt; font-weight:600; line-height:1.25; }
+table.temps td.km{ font-size:10pt; }
+table.temps td.absence{ text-align:left; font-size:8.4pt; font-weight:600; color:#333; line-height:1.2; }
+table.temps tr.fin-semaine td.jour-nom{ background:#f9f8f5; }
+table.temps tr.fin-semaine td{ background:#fcfbf9; }
+
+/* Cases où l'on ÉCRIT un total : toujours blanches, bordure épaisse.
+   Sur fond coloré, le stylo ne se lit plus — surtout à la photocopie. */
+table.temps td.tot,
+table.temps tr.fin-semaine td.tot{
+  background:#fff; border:2px solid #5A4610; font-weight:800; font-size:12pt; color:#111;
+}
+
+table.temps tr.totalsem td{
+  background:#8A6817; color:#fff; height:.5in; border:1px solid #8A6817; padding:0 8px;
+  font-size:7.6pt; letter-spacing:.09em; text-transform:uppercase; font-weight:800; text-align:right;
+  line-height:1.2;
+}
+table.temps tr.totalsem td small{ display:block; font-size:5.8pt; letter-spacing:.05em; opacity:.9; font-weight:700; }
+table.temps tr.totalsem td.ecrire{
+  background:#fff; color:#111; border:2.5px solid #111; padding:0 3px;
+  font-family:var(--titre); font-size:14pt; letter-spacing:0; text-align:center; text-transform:none;
+}
+table.temps tr.totalsem td.ecrire.km-sem{ font-size:11pt; }
+
+.notes-zone{ margin-top:12px; border:1px solid #d4d0c9; border-radius:3px; padding:7px 10px 4px; }
+.notes-zone h4{
+  margin:0 0 3px; font-size:6.8pt; letter-spacing:.12em; text-transform:uppercase; color:#8A6817; font-weight:800;
+}
+.notes-zone .texte{ font-size:9.5pt; min-height:1.1in; white-space:pre-wrap; line-height:1.5; }
+.notes-zone .lignes-vides{ border-bottom:1px solid #d6d2ca; height:.32in; }
+
+.attestation{
+  margin-top:11px; background:#F8F3E4; border-left:2.5px solid #8A6817; padding:6px 9px;
+  font-size:7.6pt; line-height:1.45; color:#3a2f0c;
+}
+.signatures{ display:grid; grid-template-columns:1fr 1fr; gap:26px; margin-top:13px; font-size:7.6pt; }
+.sig-ligne{ height:.46in; }
+.sig{ border-top:1px solid #333; padding-top:3px; color:#555; }
+.sig b{ color:#333; }
+
+.pied-page{
+  margin-top:auto; padding-top:7px; border-top:1px solid #e6e2db;
+  display:flex; justify-content:space-between; gap:12px;
+  font-size:6.4pt; color:#888; line-height:1.4;
+}
+
+/* ---------- Ce qui part à l'imprimante ----------
+   Les feuilles à imprimer sont déplacées dans #zone-impression, un conteneur
+   placé directement dans le document. Masquer les autres ne suffisait pas :
+   l'habillage de l'écran (grille, hauteurs minimales) ajoutait une page blanche. */
+#zone-impression{ display:none; }
+body.en-impression{ background:#fff; }
+body.en-impression .barre,
+body.en-impression .app{ display:none !important; }
+body.en-impression #zone-impression{ display:block; }
+#zone-impression .page{ box-shadow:none; margin:0; }
+
+/* ---------- Impression ---------- */
+@page{ size:Letter portrait; margin:0; }
+@media print{
+  body{ background:#fff; }
+  .barre,.editeur{ display:none !important; }
+  .app{ display:block; }
+  /* min-height et gap viennent de l'affichage écran : sans ça, une page blanche s'ajoute. */
+  .apercu{ padding:0; background:#fff; display:block; min-height:0 !important; gap:0 !important; }
+  .page{
+    box-shadow:none; margin:0; width:8.5in; height:10.95in;
+    break-after:page; page-break-after:always; break-inside:avoid;
+  }
+  .page:last-child{ break-after:auto; page-break-after:auto; }
+  *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+}
+@media (max-width:1100px){
+  .app{ grid-template-columns:1fr; }
+  .editeur{ position:static; height:auto; border-right:0; border-bottom:1px solid var(--bordure); }
+  .apercu{ overflow-x:auto; align-items:flex-start; }
+}
+/* Téléphone : la barre de boutons ne reste pas collée en haut (elle mangeait un quart
+   de l'écran), et le chantier prend toute sa ligne ; km · absence · motif en dessous. */
+@media (max-width:640px){
+  .barre{ position:static; }
+  .editeur{ padding:16px 12px 40px; }
+  .sousligne{ grid-template-columns:66px 52px 60px minmax(0,1fr); row-gap:4px; }
+  .sousligne input[data-champ="chantier"]{ grid-column:2 / -1; }
+  .sousligne input[data-champ="km"]{ grid-column:2; }
+}
+</style>
+</head>
+<body>
+
+<div class="barre">
+  <img src="logo.webp" alt="Les Toitures Haute-Gatineau">
+  <strong style="font-size:.9rem;letter-spacing:.02em">Feuille de temps</strong>
+  <span class="esp"></span>
+  <button class="bt" type="button" data-nouveau>Nouvelle semaine</button>
+  <button class="bt" type="button" data-exporter>Sauvegarder (.json)</button>
+  <button class="bt" type="button" data-importer>Ouvrir…</button>
+  <button class="bt" type="button" data-csv>Export paie (.csv)</button>
+  <button class="bt bt--v" type="button" data-imprimer-vierge>Imprimer la liasse vierge</button>
+  <button class="bt bt--p" type="button" data-imprimer>Imprimer / PDF</button>
+  <input type="file" accept=".json" hidden data-fichier>
+</div>
+
+<div class="app">
+
+  <!-- ================= ÉDITEUR ================= -->
+  <aside class="editeur">
+
+    <div class="alerte">
+      <strong>Deux façons de s'en servir.</strong><br>
+      <em>Sur papier :</em> « Imprimer la liasse vierge » → une pile de feuilles pour le camion,
+      une par homme, par semaine.<br>
+      <em>À l'écran :</em> saisir les heures ici, puis « Imprimer / PDF » → dans la fenêtre
+      d'impression, choisir <b>Enregistrer au format PDF</b>.<br>
+      Par jour : arrivée, <b>durée du dîner</b> (une seule case), départ — puis le chantier et
+      les <b>km</b> sur la ligne en dessous.
+    </div>
+
+    <fieldset>
+      <legend>Mon entreprise</legend>
+      <div class="c c--plein">
+        <label>Nom de l'entreprise</label>
+        <input data-e="entreprise" placeholder="Les Toitures Haute-Gatineau">
+      </div>
+      <div class="r">
+        <div class="c"><label>Téléphone</label><input data-e="telephone" placeholder="819 000-0000"></div>
+        <div class="c"><label>Licence RBQ</label><input data-e="rbq" placeholder="0000-0000-00"></div>
+      </div>
+      <div class="c c--plein">
+        <label>Adresse</label>
+        <input data-e="adresse" placeholder="Maniwaki (Québec)">
+      </div>
+      <p class="aide">Saisi une seule fois : l'ordinateur s'en souvient pour les prochaines feuilles.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>L'employé et la semaine</legend>
+      <div class="c c--plein">
+        <label>Nom de l'employé</label>
+        <input data-f="employe" placeholder="Prénom et nom">
+      </div>
+      <div class="r">
+        <div class="c">
+          <label>Semaine commençant le</label>
+          <input type="date" data-f="debut">
+        </div>
+        <div class="c">
+          <label>Premier jour de la semaine</label>
+          <select data-f="premierJour">
+            <option value="0" selected>Dimanche</option>
+            <option value="1">Lundi</option>
+          </select>
+        </div>
+      </div>
+      <div class="r">
+        <div class="c"><label>Métier / fonction</label><input data-f="metier" placeholder="Couvreur, aide, apprenti…"></div>
+        <div class="c"><label>Taux horaire (optionnel)</label><input data-f="taux" inputmode="decimal" placeholder="—"></div>
+      </div>
+      <p class="aide">Le taux horaire ne s'imprime <b>pas</b> sur la feuille de l'employé. Il ne sert
+        qu'à l'export pour la paie.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Les heures</legend>
+      <div class="jours-entetes">
+        <span>Jour</span><span>Arrivée</span><span>Dîner<small>durée</small></span><span>Départ</span><span>Total</span>
+      </div>
+      <div data-jours></div>
+      <div class="somme">
+        <span>Total de la semaine</span>
+        <b data-total-semaine>0,00 h</b>
+      </div>
+      <div class="somme" style="margin-top:4px;border-top:0;padding-top:0">
+        <span>Kilomètres de la semaine</span>
+        <b data-km-semaine style="font-size:1.1rem">0 km</b>
+      </div>
+      <p class="aide" data-avis-heures></p>
+      <p class="aide">
+        <b>Dîner</b> : la durée de la pause, dans une seule case — <code>30</code>, <code>45 min</code>,
+        <code>0:30</code>, <code>½ h</code>, <code>1 h</code>, <code>1h15</code>. Un nombre seul de 1 à 3
+        compte en heures ; au-delà, en minutes.<br>
+        <b>Km</b> : le nombre de kilomètres de la journée, à côté du chantier. Il se paie à part
+        et <b>n'entre pas</b> dans le total des heures.<br>
+        <b>Absence</b> : le temps parti (banque, médecin) — <code>1</code>, <code>1h30</code>,
+        <code>45 min</code> — et le motif à côté. Retranché du total.
+      </p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Remarques</legend>
+      <div class="c c--plein">
+        <label>Remarques de la semaine</label>
+        <textarea data-f="notes" placeholder="Arrêt pour pluie mercredi après-midi, trajet Maniwaki → Blue Sea…"></textarea>
+      </div>
+      <p class="aide">Le chantier et les km de chaque journée se saisissent sur la ligne du jour, ci-dessus.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>La liasse vierge</legend>
+      <div class="r">
+        <div class="c">
+          <label>Nombre de feuilles</label>
+          <input type="number" min="1" max="30" value="6" data-nb-vierges>
+        </div>
+        <div class="c">
+          <label>Jours pré-imprimés</label>
+          <select data-vierge-jours>
+            <option value="nom" selected>Noms des jours</option>
+            <option value="vide">Lignes vierges</option>
+          </select>
+        </div>
+      </div>
+      <p class="aide">« Lignes vierges » sert si un homme commence en milieu de semaine, ou pour une
+        période de paie différente.</p>
+    </fieldset>
+
+  </aside>
+
+  <!-- ================= APERÇU ================= -->
+  <section class="apercu" data-apercu></section>
+</div>
+
+<!-- Les feuilles à imprimer sont déplacées ici au moment de l'impression. -->
+<div id="zone-impression"></div>
+
+<script>
+/* ============================================================
+   ►►► HUGO : les coordonnées de l'entreprise se remplissent
+   directement dans le panneau de gauche, et l'ordinateur les
+   retient. Rien à modifier dans ce fichier.
+   ============================================================ */
+
+const JOURS = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+const MOIS  = ["janvier","février","mars","avril","mai","juin",
+               "juillet","août","septembre","octobre","novembre","décembre"];
+
+const CLE_ENTREPRISE = "thg-ft-entreprise";
+
+let entreprise = {
+  entreprise : "Les Toitures Haute-Gatineau",
+  telephone  : "",
+  rbq        : "",
+  adresse    : ""
+};
+
+/* Une journée. Depuis le 28 septembre 2026 :
+   - « diner » est la DURÉE de la pause (une seule case) — remplace dinerDe / dinerA ;
+   - « km » est sur la ligne du jour — remplace l'ancien bloc « Déplacement » (trajets). */
+const JOUR_VIDE = () => ({ chantier:"", km:"", arrivee:"", diner:"", depart:"", absence:"", motif:"" });
+const SEUIL_DINER   = 3;   // « 1 » = 1 h de dîner, « 30 » = 30 min
+const SEUIL_ABSENCE = 12;  // « 2 » = 2 h d'absence, « 45 » = 45 min
+
+let feuille = {
+  employe : "",
+  metier  : "",
+  taux    : "",
+  debut   : "",
+  premierJour : 0,
+  notes   : "",
+  jours   : Array.from({length:7}, JOUR_VIDE)
+};
+
+/* ---------- Outils ---------- */
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const echappe = (t) => String(t ?? "").replace(/[&<>"']/g, c =>
+  ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
+/* "7:30", "730", "7h30", "7" → minutes depuis minuit, ou null */
+function minutes(txt){
+  if (!txt) return null;
+  const t = String(txt).trim().toLowerCase().replace(/\s/g,"").replace("h",":").replace(",",":");
+  let h, m;
+  if (t.includes(":")) {
+    const p = t.split(":");
+    h = parseInt(p[0],10); m = parseInt(p[1] || "0",10);
+  } else if (/^\d{3,4}$/.test(t)) {
+    h = parseInt(t.slice(0,-2),10); m = parseInt(t.slice(-2),10);
+  } else if (/^\d{1,2}$/.test(t)) {
+    h = parseInt(t,10); m = 0;
+  } else return null;
+  if (isNaN(h) || isNaN(m) || h < 0 || h > 23 || m < 0 || m > 59) return null;
+  return h*60 + m;
+}
+
+/* Une DURÉE, pas une heure → minutes. Vide → 0. Illisible → null.
+   « 30 », « 30 min », « 45m », « 0:30 », « ½ h », « 1 h », « 1h15 », « 1:15 »,
+   « 1,5 », « 1 h 30 min », et même « 12:00-12:30 » (l'ancienne habitude de/à).
+   Un nombre seul jusqu'à `seuil` se lit en heures, au-delà en minutes :
+   au dîner (seuil 3) « 1 » = 1 h et « 30 » = 30 min. */
+function duree(txt, seuil){
+  if (seuil === undefined) seuil = SEUIL_ABSENCE;
+  if (txt === null || txt === undefined) return 0;
+  let t = String(txt).trim().toLowerCase();
+  if (!t) return 0;
+  t = t.replace(/(\d)\s*(?:½|1\/2)/g, "$1.5")          // 1½ · 1 1/2
+       .replace(/(\d)\s*¼/g, "$1.25").replace(/(\d)\s*¾/g, "$1.75")
+       .replace(/½|1\/2/g, ".5").replace(/¼/g, ".25").replace(/¾/g, ".75")
+       .replace(/demi-?heure|demie?/g, ".5h")
+       .replace(/\s+/g, "")
+       .replace(/minutes?|mins?|mn/g, "m")
+       .replace(/heures?|hres?|hrs?/g, "h")
+       .replace(/,/g, ".")
+       .replace(/^\./, "0.");
+  let m;
+  /* « 12:00-12:30 » ou « 12 à 12h30 » : on fait la différence */
+  m = t.match(/^(\d{1,2}(?:[:h]\d{2})?)(?:-|–|à|a)(\d{1,2}(?:[:h]\d{2})?)$/);
+  if (m) {
+    const a = minutes(m[1]), b = minutes(m[2]);
+    if (a === null || b === null) return null;
+    let p = b - a;
+    if (p < 0) p += 12*60;                  // « 12-1 » : 12 h à 13 h
+    return (p > 0 && p <= 4*60) ? p : null;
+  }
+  m = t.match(/^(\d{1,2})h(\d{1,2})m?$/);                  // 1h15 · 1h15m
+  if (m) return parseInt(m[1],10)*60 + parseInt(m[2],10);
+  m = t.match(/^(\d{1,2}):(\d{2})$/);                      // 1:15 · 0:30
+  if (m) return parseInt(m[1],10)*60 + parseInt(m[2],10);
+  m = t.match(/^(\d{0,2}(?:\.\d+)?)h$/);                   // 1h · 0.5h · 2h
+  if (m && m[1] !== "") return Math.round(parseFloat(m[1]) * 60);
+  m = t.match(/^(\d{1,3})m$/);                             // 45m · 30min
+  if (m) return parseInt(m[1],10);
+  m = t.match(/^(\d{0,2}\.\d+)$/);                         // 1.5 · 0.5 → heures
+  if (m) return Math.round(parseFloat(m[1]) * 60);
+  m = t.match(/^(\d{1,3})$/);                              // nombre seul
+  if (m) { const n = parseInt(m[1],10); return n <= seuil ? n*60 : n; }
+  return null;
+}
+
+/* Kilomètres : « 38 », « 12,5 », « 42 km » → nombre (0 si vide ou illisible). */
+function nombreKm(txt){
+  const t = String(txt ?? "").replace(",", ".").replace(/[^\d.]/g, "");
+  const n = parseFloat(t);
+  return isFinite(n) && n > 0 ? n : 0;
+}
+function kmLisible(n){
+  return n ? String(Math.round(n*10)/10).replace(".", ",") : "";
+}
+/* Durée du dîner telle qu'on l'imprime : « 30 min », « 1 h », « 1 h 15 ». */
+function dinerLisible(min){
+  if (!min) return "";
+  if (min < 60) return min + " min";
+  return Math.floor(min/60) + " h" + (min % 60 ? " " + String(min % 60).padStart(2,"0") : "");
+}
+
+function enHeureMinute(min){
+  if (min === null || min === undefined) return "";
+  const h = Math.floor(min/60), m = min%60;
+  return h + " h" + (m ? " " + String(m).padStart(2,"0") : "");
+}
+function hhmm(min){
+  if (min === null || min === undefined) return "";
+  return String(Math.floor(min/60)) + ":" + String(min%60).padStart(2,"0");
+}
+function decimal(min){
+  return (Math.round((min/60)*100)/100).toFixed(2).replace(".",",");
+}
+/* À l'écran, les mêmes deux décimales que sur la feuille : 7,25 h (pas 7,3 h). */
+function unHeure(min){
+  return decimal(min) + " h";
+}
+
+/* Total d'une journée, en minutes : départ − arrivée − dîner − absence.
+   Gère le quart qui passe minuit. Les km n'y entrent jamais.
+   Un dîner ou une absence illisible (encadré en rouge) → pas de total :
+   mieux vaut une case vide qu'un total faux qui part à la paie. */
+function totalJour(j){
+  const a = minutes(j.arrivee), d = minutes(j.depart);
+  if (a === null || d === null) return null;
+  let brut = d - a;
+  if (brut < 0) brut += 24*60;              // fin après minuit
+  const pause = duree(j.diner, SEUIL_DINER);
+  const abs   = duree(j.absence, SEUIL_ABSENCE);
+  if (pause === null || abs === null) return null;
+  const net = brut - pause - abs;
+  return net > 0 ? net : 0;
+}
+
+/* ---------- Anciennes feuilles (avant le 28 septembre 2026) ----------
+   dinerDe / dinerA  → diner (durée, « 30 min »)
+   trajets[] (bloc Déplacement) → km additionnés au jour indiqué, ou au dimanche
+   si aucun jour ne se reconnaît ; le libellé du trajet et le temps de route
+   passent dans les Remarques pour que rien ne se perde. */
+const PREFIXES_JOURS = ["di","lu","ma","me","je","ve","sa"];   // index = getDay()
+function indexJourAncien(txt, premier, debut){
+  const dimanche = (7 - premier) % 7;
+  const t = String(txt ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "")
+                             .trim().toLowerCase();
+  if (!t) return dimanche;
+  const w = PREFIXES_JOURS.indexOf(t.slice(0,2));
+  if (w >= 0) return (w - premier + 7) % 7;
+  const une = { d:0, l:1, j:4, v:5, s:6 }[t];
+  if (une !== undefined) return (une - premier + 7) % 7;
+  const n = t.match(/^(\d{1,2})\b/);                           // « 15 » = le 15 du mois
+  if (n && debut) {
+    const p = String(debut).split("-").map(Number);
+    for (let i = 0; i < 7; i++){
+      const d = new Date(p[0], p[1]-1, p[2] + i);
+      if (d.getDate() === Number(n[1])) return i;
+    }
+  }
+  return dimanche;
+}
+function migrer(d){
+  if (!d || typeof d !== "object") return d;
+  const premier = Number(d.premierJour) || 0;
+  const source = (Array.isArray(d.jours) && d.jours.length === 7) ? d.jours : [];
+  d.jours = Array.from({length:7}, (_, i) => {
+    const n = Object.assign(JOUR_VIDE(), source[i] || {});
+    if (!n.diner && ("dinerDe" in n || "dinerA" in n)) {
+      const dd = minutes(n.dinerDe), da = minutes(n.dinerA);
+      if (dd !== null && da !== null) {
+        let p = da - dd;
+        if (p < 0) p += 24*60;
+        if (p > 0) n.diner = p + " min";
+      }
+    }
+    delete n.dinerDe; delete n.dinerA;
+    return n;
+  });
+  if (Array.isArray(d.trajets)) {
+    const notes = [];
+    d.trajets.forEach(t => {
+      if (!t) return;
+      const km = nombreKm(t.km);
+      if (!km && !t.trajet && !t.route) return;
+      const i = indexJourAncien(t.jour, premier, d.debut);
+      if (km) d.jours[i].km = kmLisible(nombreKm(d.jours[i].km) + km);
+      if (t.trajet || t.route) {
+        notes.push([t.jour, t.trajet, km ? kmLisible(km) + " km" : "", t.route ? "route " + t.route : ""]
+                   .filter(Boolean).join(", "));
+      }
+    });
+    if (notes.length) d.notes = (d.notes ? d.notes + "\n" : "") + "Déplacement : " + notes.join(" ; ");
+    delete d.trajets;
+  }
+  return d;
+}
+
+function dateDuJour(i){
+  if (!feuille.debut) return null;
+  const p = feuille.debut.split("-").map(Number);
+  const d = new Date(p[0], p[1]-1, p[2]);
+  d.setDate(d.getDate() + i);
+  return d;
+}
+/* Abréviations usuelles (« 7 avr. », « 20 sept. ») — pas une coupe à 4 lettres (« avri »). */
+const MOIS_COURTS = ["janv.","févr.","mars","avr.","mai","juin",
+                     "juill.","août","sept.","oct.","nov.","déc."];
+function dateCourte(d){
+  return d ? (d.getDate() + " " + MOIS_COURTS[d.getMonth()]) : "";
+}
+function dateLongue(d){
+  return d ? (d.getDate() + " " + MOIS[d.getMonth()] + " " + d.getFullYear()) : "";
+}
+function nomJour(i){
+  const premier = Number(feuille.premierJour);
+  return JOURS[(premier + i) % 7];
+}
+function estFinSemaine(i){
+  const premier = Number(feuille.premierJour);
+  const j = (premier + i) % 7;
+  return j === 0 || j === 6;
+}
+
+/* ---------- Panneau de saisie ---------- */
+function construireJours(){
+  const hote = $("[data-jours]");
+  hote.innerHTML = "";
+  for (let i = 0; i < 7; i++){
+    const j = feuille.jours[i];
+    const d = dateDuJour(i);
+    const l = document.createElement("div");
+    l.className = "jour" + (estFinSemaine(i) ? " jour--conge" : "");
+    l.innerHTML =
+      '<span class="etiq">' + nomJour(i) + '<small>' + (d ? dateCourte(d) : "—") + '</small></span>' +
+      '<input data-j="' + i + '" data-champ="arrivee"  placeholder="7:00"  value="' + echappe(j.arrivee) + '">' +
+      '<input data-j="' + i + '" data-champ="diner"    placeholder="30 min" value="' + echappe(j.diner) + '">' +
+      '<input data-j="' + i + '" data-champ="depart"   placeholder="16:30" value="' + echappe(j.depart)  + '">' +
+      '<span class="calc" data-calc="' + i + '">—</span>';
+    hote.appendChild(l);
+
+    const sous = document.createElement("div");
+    sous.className = "sousligne";
+    sous.innerHTML =
+      '<span class="vide-gauche">chantier</span>' +
+      '<input data-j="' + i + '" data-champ="chantier" placeholder="Où il a travaillé" value="' + echappe(j.chantier) + '">' +
+      '<input data-j="' + i + '" data-champ="km" inputmode="decimal" placeholder="km" value="' + echappe(j.km) + '" style="text-align:center">' +
+      '<input data-j="' + i + '" data-champ="absence" placeholder="abs." title="Absence — durée (1 h, 45 min)" value="' + echappe(j.absence) + '" style="text-align:center">' +
+      '<input data-j="' + i + '" data-champ="motif" placeholder="Motif" title="Motif de l\'absence — banque, médecin…" value="' + echappe(j.motif) + '">';
+    hote.appendChild(sous);
+    marquerInvalides(i);
+  }
+  hote.oninput = (e) => {
+    const inp = e.target.closest("[data-j]");
+    if (!inp) return;
+    feuille.jours[Number(inp.dataset.j)][inp.dataset.champ] = inp.value;
+    marquerInvalides(Number(inp.dataset.j));
+    rafraichirTotaux();
+    dessiner();
+  };
+}
+
+/* Encadre en rouge ce que la feuille ne sait pas lire, au lieu de l'ignorer en silence. */
+function marquerInvalides(i){
+  const j = feuille.jours[i];
+  const test = {
+    arrivee : () => !j.arrivee || minutes(j.arrivee) !== null,
+    depart  : () => !j.depart  || minutes(j.depart)  !== null,
+    diner   : () => duree(j.diner, SEUIL_DINER) !== null,
+    absence : () => duree(j.absence, SEUIL_ABSENCE) !== null,
+    km      : () => !String(j.km).trim() || nombreKm(j.km) > 0 || /^\s*0+([.,]0*)?\s*$/.test(j.km)
+  };
+  Object.keys(test).forEach(ch => {
+    const inp = $('[data-j="' + i + '"][data-champ="' + ch + '"]');
+    if (inp) inp.classList.toggle("invalide", !test[ch]());
+  });
+}
+
+/* La semaine en cours est gardée dans le navigateur : fermer la page ou le
+   téléphone ne perd rien. « Nouvelle semaine » repart à vide. */
+const CLE_BROUILLON = "thg-ft-brouillon";
+function sauverBrouillon(){
+  try { localStorage.setItem(CLE_BROUILLON, JSON.stringify(feuille)); } catch(e){}
+}
+
+function rafraichirTotaux(){
+  sauverBrouillon();
+  let somme = 0;
+  for (let i = 0; i < 7; i++){
+    const t = totalJour(feuille.jours[i]);
+    const cible = $('[data-calc="' + i + '"]');
+    if (cible) cible.textContent = (t === null ? "—" : unHeure(t));
+    if (t) somme += t;
+  }
+  $("[data-total-semaine]").textContent = unHeure(somme);
+  $("[data-km-semaine]").textContent = (kmLisible(kmSemaine()) || "0") + " km";
+
+  const avis = $("[data-avis-heures]");
+  if (somme > 40*60) {
+    avis.innerHTML = "<b>" + unHeure(somme - 40*60) + "</b> au-delà de 40 h cette semaine. " +
+      "Vérifiez la majoration applicable avant de faire la paie.";
+  } else {
+    avis.textContent = "Écrire l'heure comme on la dit : 7, 7:30, 730 ou 7h30 — tout est accepté.";
+  }
+  return somme;
+}
+function kmSemaine(){
+  return feuille.jours.reduce((s, j) => s + nombreKm(j.km), 0);
+}
+
+/* ---------- La feuille imprimée ---------- */
+/* « 1 h — banque », « 1 h 30 — médecin ». Vide si rien n'est noté. */
+function absenceLisible(j){
+  const m = duree(j.absence, SEUIL_ABSENCE) || 0;
+  if (!m && !j.motif) return "";
+  const h = m ? dinerLisible(m) : "";
+  return (h && j.motif) ? (h + " — " + j.motif) : (h || j.motif);
+}
+
+function enTete(){
+  const ident = [
+    entreprise.adresse ? echappe(entreprise.adresse) : "",
+    entreprise.telephone ? echappe(entreprise.telephone) : "",
+    entreprise.rbq ? "<b>RBQ</b> " + echappe(entreprise.rbq) : ""
+  ].filter(Boolean).join("<br>");
+
+  return '' +
+    '<div class="tete">' +
+      '<div class="tete-logo">' +
+        '<img src="logo.webp" alt="">' +
+        '<div class="tete-ident"><b>' + echappe(entreprise.entreprise || "Les Toitures Haute-Gatineau") + '</b><br>' + ident + '</div>' +
+      '</div>' +
+      '<div class="tete-droite">' +
+        '<h1 class="doc-type">Feuille de temps</h1>' +
+        '<p class="doc-sous">Une feuille par personne, par semaine</p>' +
+      '</div>' +
+    '</div>';
+}
+
+function bandeauQui(vierge){
+  const d0 = dateDuJour(0), d6 = dateDuJour(6);
+  const periode = (d0 && d6)
+    ? ("du " + dateLongue(d0) + " au " + dateLongue(d6))
+    : '<span class="vide">&nbsp;</span> au <span class="vide">&nbsp;</span>';
+  return '' +
+    '<div class="qui">' +
+      '<div class="bloc"><h4>Employé</h4><div class="val">' +
+        (vierge || !feuille.employe ? '<span class="vide" style="min-width:2.6in">&nbsp;</span>' : echappe(feuille.employe)) +
+      '</div></div>' +
+      '<div class="bloc"><h4>Semaine</h4><div class="val val--petit">' +
+        (vierge ? '<span class="vide">&nbsp;</span> au <span class="vide">&nbsp;</span>' : periode) +
+      '</div></div>' +
+    '</div>';
+}
+
+function tableauTemps(vierge, joursNommes){
+  let lignes = "", somme = 0, sommeKm = 0;
+
+  for (let i = 0; i < 7; i++){
+    const j = vierge ? JOUR_VIDE() : feuille.jours[i];
+    const t = vierge ? null : totalJour(j);
+    if (t) somme += t;
+    const km = nombreKm(j.km);
+    sommeKm += km;
+    const pause = duree(j.diner, SEUIL_DINER);
+    const d = vierge ? null : dateDuJour(i);
+    const nom = (vierge && !joursNommes) ? "" : nomJour(i);
+    const sousTitre = (vierge || !d) ? "" : "<small>" + dateCourte(d) + "</small>";
+
+    lignes +=
+      '<tr' + (estFinSemaine(i) ? ' class="fin-semaine"' : '') + '>' +
+        '<td class="jour-nom">' + echappe(nom) + sousTitre + '</td>' +
+        '<td class="chantier">' + echappe(j.chantier) + '</td>' +
+        '<td class="km">' + kmLisible(km) + '</td>' +
+        '<td>' + (minutes(j.arrivee) !== null ? hhmm(minutes(j.arrivee)) : "") + '</td>' +
+        '<td class="diner">' + dinerLisible(pause) + '</td>' +
+        '<td>' + (minutes(j.depart)  !== null ? hhmm(minutes(j.depart))  : "") + '</td>' +
+        '<td class="absence">' + echappe(absenceLisible(j)) + '</td>' +
+        '<td class="tot">' + (t ? decimal(t) : "") + '</td>' +
+      '</tr>';
+  }
+
+  return '' +
+    '<table class="temps">' +
+      '<colgroup>' +
+        '<col class="c-jour"><col class="c-chantier"><col class="c-km">' +
+        '<col class="c-heure"><col class="c-diner"><col class="c-heure">' +
+        '<col class="c-abs"><col class="c-tot">' +
+      '</colgroup>' +
+      '<thead><tr>' +
+        '<th class="g">Jour</th>' +
+        '<th class="g">Chantier</th>' +
+        '<th>Km</th>' +
+        '<th>Arrivée</th>' +
+        '<th>Dîner<small>durée</small></th>' +
+        '<th>Départ</th>' +
+        '<th>Absence<small>non travaillé</small></th>' +
+        '<th>Total<br>heures</th>' +
+      '</tr></thead>' +
+      '<tbody>' + lignes +
+        '<tr class="totalsem">' +
+          '<td colspan="2">Km de la semaine<small>payés à part — hors heures</small></td>' +
+          '<td class="ecrire km-sem">' + (vierge || !sommeKm ? "" : kmLisible(sommeKm)) + '</td>' +
+          '<td colspan="4">Total des heures de la semaine</td>' +
+          '<td class="ecrire grand">' + (vierge || !somme ? "" : decimal(somme)) + '</td>' +
+        '</tr>' +
+      '</tbody>' +
+    '</table>';
+}
+
+function basDePage(vierge){
+  const notes = (!vierge && feuille.notes)
+    ? '<div class="texte">' + echappe(feuille.notes) + '</div>'
+    : '<div class="lignes-vides"></div><div class="lignes-vides"></div>' +
+      '<div class="lignes-vides"></div><div class="lignes-vides"></div>';
+
+  return '' +
+    '<div class="notes-zone">' +
+      '<h4>Remarques — pluie, bris, trajet (de / à), heures supplémentaires demandées</h4>' + notes +
+    '</div>' +
+    '<div class="attestation">' +
+      'Je déclare que les heures inscrites ci-dessus sont exactes et correspondent au temps ' +
+      'réellement travaillé. Toute heure supplémentaire a été demandée ou autorisée par l\'employeur.' +
+    '</div>' +
+    '<div class="signatures">' +
+      '<div><div class="sig-ligne"></div><div class="sig"><b>Signature de l\'employé</b> &nbsp; Date : ______________</div></div>' +
+      '<div><div class="sig-ligne"></div><div class="sig"><b>Approuvé par</b> &nbsp; Date : ______________</div></div>' +
+    '</div>' +
+    '<div class="pied-page">' +
+      '<span>' + echappe(entreprise.entreprise || "Les Toitures Haute-Gatineau") + ' — feuille de temps</span>' +
+      '<span>Total en heures décimales (7:30 = 7,50). &nbsp;·&nbsp; À conserver 6 ans avec les registres de paie.</span>' +
+    '</div>';
+}
+
+function unePage(vierge, joursNommes){
+  return '<article class="page' + (vierge ? " page--vierge" : "") + '"><div class="feuille">' +
+    enTete() + bandeauQui(vierge) + tableauTemps(vierge, joursNommes) + basDePage(vierge) +
+  '</div></article>';
+}
+
+function dessiner(){
+  const nb = Math.max(1, Math.min(30, Number($("[data-nb-vierges]").value) || 1));
+  const joursNommes = $("[data-vierge-jours]").value === "nom";
+  let html = unePage(false, true);
+  for (let i = 0; i < nb; i++) html += unePage(true, joursNommes);
+  $("[data-apercu]").innerHTML = html;
+}
+
+/* ---------- Mémoire locale ---------- */
+function chargerEntreprise(){
+  try {
+    const brut = localStorage.getItem(CLE_ENTREPRISE);
+    if (brut) entreprise = Object.assign(entreprise, JSON.parse(brut));
+  } catch(e){ /* navigation privée : on continue sans mémoire */ }
+  $$("[data-e]").forEach(i => { i.value = entreprise[i.dataset.e] || ""; });
+}
+function sauverEntreprise(){
+  try { localStorage.setItem(CLE_ENTREPRISE, JSON.stringify(entreprise)); } catch(e){}
+}
+
+/* ---------- Branchements ---------- */
+$$("[data-e]").forEach(i => i.addEventListener("input", () => {
+  entreprise[i.dataset.e] = i.value;
+  sauverEntreprise(); dessiner();
+}));
+
+$$("[data-f]").forEach(i => i.addEventListener("input", () => {
+  feuille[i.dataset.f] = i.value;
+  if (i.dataset.f === "debut" || i.dataset.f === "premierJour") construireJours();
+  rafraichirTotaux(); dessiner();
+}));
+
+$("[data-nb-vierges]").addEventListener("input", dessiner);
+$("[data-vierge-jours]").addEventListener("change", dessiner);
+
+$("[data-nouveau]").addEventListener("click", () => {
+  if (!confirm("Effacer les heures et repartir d'une semaine vide ?")) return;
+  feuille.jours = Array.from({length:7}, JOUR_VIDE);
+  feuille.notes = "";
+  $('[data-f="notes"]').value = "";
+  construireJours(); rafraichirTotaux(); dessiner();
+});
+
+$("[data-exporter]").addEventListener("click", () => {
+  const nom = "feuille-temps-" +
+    (feuille.employe || "employe").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") +
+    "-" + (feuille.debut || "semaine") + ".json";
+  const lien = document.createElement("a");
+  lien.href = URL.createObjectURL(new Blob([JSON.stringify(feuille, null, 2)], { type:"application/json" }));
+  lien.download = nom;
+  lien.click();
+  URL.revokeObjectURL(lien.href);
+});
+
+$("[data-importer]").addEventListener("click", () => $("[data-fichier]").click());
+$("[data-fichier]").addEventListener("change", (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const lecteur = new FileReader();
+  lecteur.onload = () => {
+    try {
+      const d = JSON.parse(lecteur.result);
+      if (!d || typeof d !== "object" || Array.isArray(d)) throw new Error("format");
+      /* Une feuille d'avant le 28 septembre (dîner de/à, bloc Déplacement) est convertie ici. */
+      feuille = Object.assign(feuille, migrer(d));
+      delete feuille.trajets;
+      $$("[data-f]").forEach(i => { i.value = feuille[i.dataset.f] ?? ""; });
+      construireJours(); rafraichirTotaux(); dessiner();
+    } catch(err){ alert("Ce fichier n'est pas une feuille de temps valide."); }
+  };
+  lecteur.readAsText(f);
+  e.target.value = "";
+});
+
+$("[data-csv]").addEventListener("click", () => {
+  if ($$("[data-jours] input.invalide").length &&
+      !confirm("Des cases encadrées en rouge ne se lisent pas : ces journées n'ont pas de total. " +
+               "Exporter quand même ?")) return;
+  const taux = parseFloat(String(feuille.taux).replace(",", ".")) || 0;
+  const l = [["Employé","Métier","Date","Jour","Chantier","Km","Arrivée","Dîner (min)","Départ","Heures","Taux","Montant"]];
+  let somme = 0, sommeKm = 0;
+  for (let i = 0; i < 7; i++){
+    const j = feuille.jours[i], t = totalJour(j), km = nombreKm(j.km);
+    if (!t && !km) continue;
+    somme += t || 0; sommeKm += km;
+    const d = dateDuJour(i);
+    const h = ((t || 0)/60);
+    const pause = duree(j.diner, SEUIL_DINER);
+    l.push([
+      feuille.employe, feuille.metier,
+      d ? d.toISOString().slice(0,10) : "", nomJour(i), j.chantier,
+      kmLisible(km),
+      hhmm(minutes(j.arrivee)), pause ? String(pause) : "", hhmm(minutes(j.depart)),
+      decimal(t || 0), taux ? String(taux).replace(".",",") : "",
+      taux ? (Math.round(h*taux*100)/100).toFixed(2).replace(".",",") : ""
+    ]);
+  }
+  l.push([]);
+  l.push(["","","","","TOTAL", kmLisible(sommeKm) || "0", "","","", decimal(somme), taux ? String(taux).replace(".",",") : "",
+          taux ? (Math.round((somme/60)*taux*100)/100).toFixed(2).replace(".",",") : ""]);
+
+  const csv = "﻿" + l.map(r => r.map(c => {
+    const v = String(c ?? "");
+    return /[";\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v;
+  }).join(";")).join("\r\n");
+
+  const lien = document.createElement("a");
+  lien.href = URL.createObjectURL(new Blob([csv], { type:"text/csv;charset=utf-8" }));
+  lien.download = "paie-" + (feuille.employe || "employe").toLowerCase().replace(/[^a-z0-9]+/g,"-") +
+                  "-" + (feuille.debut || "semaine") + ".csv";
+  lien.click();
+  URL.revokeObjectURL(lien.href);
+});
+
+/* Prépare #zone-impression avec les seules feuilles voulues, et règle les sauts
+   de page à la main : « toujours » après chaque feuille sauf la dernière. */
+function preparerImpression(quoi){
+  const zone = document.getElementById("zone-impression");
+  zone.innerHTML = "";
+  const garder = (p) => quoi === "vierge" ? p.classList.contains("page--vierge")
+                                          : !p.classList.contains("page--vierge");
+  $$(".apercu .page").filter(garder).forEach(p => zone.appendChild(p.cloneNode(true)));
+  const pages = $$("#zone-impression .page");
+  pages.forEach((p, i) => {
+    p.style.breakAfter = p.style.pageBreakAfter = (i === pages.length - 1) ? "auto" : "always";
+  });
+  document.body.classList.add("en-impression");
+  return pages.length;
+}
+
+function imprimer(quoi){
+  if (!preparerImpression(quoi)) { alert("Rien à imprimer."); return; }
+  /* Le titre de la page devient le nom proposé pour le PDF :
+     « Feuille de temps – Kevin Paradis – semaine du 2026-09-20 ». */
+  const titre = document.title;
+  if (quoi === "remplie") {
+    document.title = "Feuille de temps – " + (feuille.employe.trim() || "employé") +
+      (feuille.debut ? " – semaine du " + feuille.debut : "");
+  }
+  const fin = () => {
+    document.title = titre;
+    document.body.classList.remove("en-impression");
+    document.getElementById("zone-impression").innerHTML = "";
+    window.removeEventListener("afterprint", fin);
+  };
+  window.addEventListener("afterprint", fin);
+  window.print();
+  setTimeout(fin, 2000);
+}
+/* « vierge » exactement : l'ancien appel passait « impr-vierge », que preparerImpression
+   ne reconnaissait pas — le bouton de la liasse imprimait la feuille remplie. */
+$("[data-imprimer]").addEventListener("click", () => imprimer("remplie"));
+$("[data-imprimer-vierge]").addEventListener("click", () => imprimer("vierge"));
+
+/* ---------- Démarrage ---------- */
+chargerEntreprise();
+/* Reprend la semaine commencée, s'il y en a une ; sinon, la semaine courante. */
+const brouillonRepris = (function reprendreBrouillon(){
+  try {
+    const d = JSON.parse(localStorage.getItem(CLE_BROUILLON) || "null");
+    if (!d || typeof d !== "object" || Array.isArray(d) || !Array.isArray(d.jours)) return false;
+    feuille = Object.assign(feuille, migrer(d));
+    delete feuille.trajets;
+    $$("[data-f]").forEach(i => { i.value = feuille[i.dataset.f] ?? ""; });
+    return !!feuille.debut;
+  } catch(e){ return false; }
+})();
+if (!brouillonRepris) (function semaineCourante(){
+  const a = new Date();
+  /* Dimanche → samedi : c'est la semaine de travail de la construction
+     (R-20, r. 11, art. 12). Le sélecteur permet de passer au lundi. */
+  const decalage = a.getDay() - Number(feuille.premierJour);
+  a.setDate(a.getDate() - ((decalage + 7) % 7));
+  feuille.debut = a.getFullYear() + "-" +
+    String(a.getMonth()+1).padStart(2,"0") + "-" + String(a.getDate()).padStart(2,"0");
+  $('[data-f="debut"]').value = feuille.debut;
+})();
+construireJours();
+rafraichirTotaux();
+dessiner();
+
+/* Permet de fabriquer le PDF vierge sans aucun clic :
+   feuille-de-temps.html?vierge=1  →  n'affiche que les feuilles vierges. */
+(function parAdresse(){
+  const p = new URLSearchParams(location.search);
+  if (p.get("vierge")) {
+    const n = Math.max(1, Math.min(30, Number(p.get("n")) || 1));
+    $("[data-nb-vierges]").value = n;
+    dessiner();
+    preparerImpression("vierge");
+  }
+})();
+</script>
+</body>
+</html>
